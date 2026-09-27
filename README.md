@@ -19,10 +19,10 @@ This endpoint only satisfies deletion-notification delivery; it does **not** imp
 
 ## Privacy policy page
 
-`privacy.html` is a plain-language privacy notice for Harry's personal-use app. To use it in eBay's OAuth consent settings, publish it at a public HTTPS URL (for example, enable GitHub Pages for this repository from `main` / root, then use `https://harrysimms0806.github.io/ebay-account-deletion-endpoint/privacy.html`). Verify the page loads publicly before entering it. Confirm the notice matches actual data handling and replace the contact wording with a real contact method if eBay requires one.
+`privacy.html` is served by the Railway app at `/privacy`. With the custom domain active, use `https://ebay.hdsapp.co.uk/privacy` in eBay OAuth consent settings. Verify it loads publicly before entering it. Confirm the notice matches actual data handling and replace the contact wording with a real contact method if eBay requires one.
 
 ## Custom domain
 
 Planned Railway custom domain: `ebay.hdsapp.co.uk`. Configure this hostname in the Railway service's public networking settings, then add the exact DNS record Railway provides in Cloudflare (normally a CNAME; use Railway's displayed target and any verification record exactly). Keep proxying/DNS settings as Railway instructs until Railway reports the domain active and HTTPS certificate issued.
 
-After activation, set `EBAY_NOTIFICATION_ENDPOINT` in Railway to the exact eBay callback URL on this domain (for example `https://ebay.hdsapp.co.uk/`) and use the same exact URL in eBay notification settings. Set the OAuth privacy policy URL to `https://ebay.hdsapp.co.uk/privacy`. Check both public URLs before saving eBay settings.
+After activation, set `EBAY_NOTIFICATION_ENDPOINT` in Railway to exactly `https://ebay.hdsapp.co.uk/` and use that same URL as eBay's Marketplace Account Deletion notification endpoint. Set the OAuth privacy policy URL to `https://ebay.hdsapp.co.uk/privacy`. The challenge hash uses the exact endpoint string; mismatched host, path, or trailing slash will fail. After changing the Railway variable, wait for redeployment, then save the same URL in eBay to re-run validation. Check both public URLs before saving eBay settings.
