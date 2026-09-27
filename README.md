@@ -16,3 +16,7 @@ Small Node.js service for eBay's Marketplace Account Deletion notifications. No 
 Never put tokens or eBay app keys in Git, issues, chat, or build logs. Store the verification token only in Railway Variables. Railway and eBay may retain infrastructure access logs; this app itself deliberately does not log request URLs or payloads. Check Railway logging settings if strict non-retention is required.
 
 This endpoint only satisfies deletion-notification delivery; it does **not** implement eBay OAuth or listing management. Check eBay's current requirements before production use: https://developer.ebay.com/develop/guides/sell/marketplace-user-account-deletion
+
+## Privacy policy page
+
+`privacy.html` is a plain-language privacy notice for Harry's personal-use app. To use it in eBay's OAuth consent settings, publish it at a public HTTPS URL (for example, enable GitHub Pages for this repository from `main` / root, then use `https://harrysimms0806.github.io/ebay-account-deletion-endpoint/privacy.html`). Verify the page loads publicly before entering it. Confirm the notice matches actual data handling and replace the contact wording with a real contact method if eBay requires one.
