@@ -20,3 +20,9 @@ This endpoint only satisfies deletion-notification delivery; it does **not** imp
 ## Privacy policy page
 
 `privacy.html` is a plain-language privacy notice for Harry's personal-use app. To use it in eBay's OAuth consent settings, publish it at a public HTTPS URL (for example, enable GitHub Pages for this repository from `main` / root, then use `https://harrysimms0806.github.io/ebay-account-deletion-endpoint/privacy.html`). Verify the page loads publicly before entering it. Confirm the notice matches actual data handling and replace the contact wording with a real contact method if eBay requires one.
+
+## Custom domain
+
+Planned Railway custom domain: `ebay.hdsapp.co.uk`. Configure this hostname in the Railway service's public networking settings, then add the exact DNS record Railway provides in Cloudflare (normally a CNAME; use Railway's displayed target and any verification record exactly). Keep proxying/DNS settings as Railway instructs until Railway reports the domain active and HTTPS certificate issued.
+
+After activation, set `EBAY_NOTIFICATION_ENDPOINT` in Railway to the exact eBay callback URL on this domain (for example `https://ebay.hdsapp.co.uk/`) and use the same exact URL in eBay notification settings. Set the OAuth privacy policy URL to `https://ebay.hdsapp.co.uk/privacy`. Check both public URLs before saving eBay settings.
