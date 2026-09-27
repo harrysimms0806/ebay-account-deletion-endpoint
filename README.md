@@ -1,28 +1,32 @@
-# eBay Marketplace Account Deletion endpoint
+# eBay seller connector + account-deletion endpoint
 
-Small Node.js service for eBay's Marketplace Account Deletion notifications. No database or dependencies. It computes eBay's challenge response and acknowledges valid JSON notifications without logging or persisting their payloads.
+Node.js service for eBay Marketplace Account Deletion notifications, a public privacy notice, and a private single-seller OAuth connection. No third-party dependencies.
 
-## Deploy on Railway
+## Railway configuration
 
-1. Create a Railway project/service from this GitHub repository's `main` branch. Build from the repository root (the folder containing `package.json`).
-2. Railway detects Node.js and runs `npm start`; the service listens on Railway's `PORT`.
-3. Generate a public HTTPS domain in Railway **Settings → Networking**.
-4. Choose the exact callback URL, e.g. `https://<your-domain>/`. In Railway **Variables**, set:
-   - `EBAY_VERIFICATION_TOKEN`: a newly generated 32–80 character alphanumeric secret.
-   - `EBAY_NOTIFICATION_ENDPOINT`: the exact callback URL, including trailing slash if using `/`.
-5. In eBay Developer Portal, Production → Application Keys → Notifications, choose Marketplace Account Deletion and enter the same callback URL and token. Save; eBay's GET challenge must validate. The hash is SHA-256 of `challenge_code + verification token + exact endpoint URL`, UTF-8, lowercase hex, returned as JSON `{"challengeResponse":"..."}` with HTTP 200.
-6. Verify `GET /health` returns `ok`. POST notifications receive 204 only when valid JSON is received; no payload is saved.
+Deploy from repository root; start command is npm start. Attach a Railway persistent volume at /data so the encrypted refresh token survives redeploys. Configure these variables in Railway (never put values in Git or chat):
 
-Never put tokens or eBay app keys in Git, issues, chat, or build logs. Store the verification token only in Railway Variables. Railway and eBay may retain infrastructure access logs; this app itself deliberately does not log request URLs or payloads. Check Railway logging settings if strict non-retention is required.
+- EBAY_VERIFICATION_TOKEN: 32–80 alphanumeric chars for deletion-notification challenge.
+- EBAY_NOTIFICATION_ENDPOINT: exact public callback URL, e.g. https://ebay.hdsapp.co.uk/ (including trailing slash).
+- EBAY_CLIENT_ID: Production App ID / Client ID.
+- EBAY_CLIENT_SECRET: Production Cert ID / Client Secret.
+- EBAY_RUNAME: exact RuName identifier from eBay Developer Portal, not a URL.
+- EBAY_OAUTH_SCOPES: space-separated OAuth scopes. Default is https://api.ebay.com/oauth/api_scope/sell.inventory.
+- EBAY_TOKEN_ENCRYPTION_KEY: 64 hex characters (32 random bytes) for AES-256-GCM token encryption.
+- EBAY_CONNECTOR_ADMIN_KEY: long random secret to protect connector routes.
 
-This endpoint only satisfies deletion-notification delivery; it does **not** implement eBay OAuth or listing management. Check eBay's current requirements before production use: https://developer.ebay.com/develop/guides/sell/marketplace-user-account-deletion
+In the eBay RuName settings, set Auth Accepted URL to https://ebay.hdsapp.co.uk/oauth/callback and set the exact RuName in EBAY_RUNAME. Ensure the selected OAuth scopes in the authorization request match the scopes approved for the application. In eBay's Marketplace Account Deletion settings use the exact EBAY_NOTIFICATION_ENDPOINT and matching verification token.
 
-## Privacy policy page
+## Connect the seller account
 
-`privacy.html` is served by the Railway app at `/privacy`. With the custom domain active, use `https://ebay.hdsapp.co.uk/privacy` in eBay OAuth consent settings. Verify it loads publicly before entering it. Confirm the notice matches actual data handling and replace the contact wording with a real contact method if eBay requires one.
+After Railway deploys the latest code and variables/volume are in place, visit https://ebay.hdsapp.co.uk/connect. At the browser's HTTP Basic prompt, use any username and EBAY_CONNECTOR_ADMIN_KEY as password. The app redirects to eBay Production consent; approve the requested scopes. eBay returns to /oauth/callback; the app exchanges the code and stores the refresh token encrypted on the volume. Do not send tokens or keys in chat.
 
-## Custom domain
+Authenticated routes: GET /api/connection checks token refresh; GET /api/inventory reads up to 100 inventory records. Use the admin key as a Bearer token for programmatic calls. This first cut is read-only: it does not yet create/publish listings, modify orders, or provide an OpenClaw-native tool.
 
-Planned Railway custom domain: `ebay.hdsapp.co.uk`. Configure this hostname in the Railway service's public networking settings, then add the exact DNS record Railway provides in Cloudflare (normally a CNAME; use Railway's displayed target and any verification record exactly). Keep proxying/DNS settings as Railway instructs until Railway reports the domain active and HTTPS certificate issued.
+## Privacy and DNS
 
-After activation, set `EBAY_NOTIFICATION_ENDPOINT` in Railway to exactly `https://ebay.hdsapp.co.uk/` and use that same URL as eBay's Marketplace Account Deletion notification endpoint. Set the OAuth privacy policy URL to `https://ebay.hdsapp.co.uk/privacy`. The challenge hash uses the exact endpoint string; mismatched host, path, or trailing slash will fail. After changing the Railway variable, wait for redeployment, then save the same URL in eBay to re-run validation. Check both public URLs before saving eBay settings.
+privacy.html is served at https://ebay.hdsapp.co.uk/privacy. The policy must match the actual deployed data handling. Configure ebay.hdsapp.co.uk as a Railway custom domain and add the exact DNS record Railway provides in Cloudflare; wait for HTTPS certificate issuance.
+
+## Verify
+
+GET /health returns JSON {"ok":true}. Never commit credentials, OAuth codes, access tokens, refresh tokens, verification tokens, or admin keys. The app does not log OAuth codes or tokens.
